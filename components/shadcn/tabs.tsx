@@ -2,8 +2,8 @@
 
 import * as React from 'react'
 import * as TabsPrimitive from '@radix-ui/react-tabs'
-
 import { cn } from '@/lib/shadcn'
+import GlowGroup from '../elements/GlowGroup'
 
 const Tabs = TabsPrimitive.Root
 
@@ -14,9 +14,9 @@ const TabsList = React.forwardRef<
   <TabsPrimitive.List
     ref={ref}
     className={cn(
-      `h-10 inline-flex items-center justify-center gap-6
-      rounded-md bg-transparent p-1 text-neutral-500 
-      dark:bg-neutral-800 dark:text-neutral-400`,
+      `mb-4 px-8 py-1 inline-flex items-center justify-center gap-6
+      bg-neutral-950 border border-neutral-900 text-neutral-500
+      rounded-primary`,
       className
     )}
     {...props}
@@ -28,21 +28,24 @@ const TabsTrigger = React.forwardRef<
   React.ElementRef<typeof TabsPrimitive.Trigger>,
   React.ComponentPropsWithoutRef<typeof TabsPrimitive.Trigger>
 >(({ className, ...props }, ref) => (
-  <TabsPrimitive.Trigger
-    ref={ref}
-    className={cn(
-      `px-3 py-1.5 inline-flex items-center justify-center whitespace-nowrap 
-      rounded-full text-sm font-medium ring-offset-white  
-      focus-visible:outline-none focus-visible:ring-2 
-      focus-visible:ring-neutral-950 focus-visible:ring-offset-2 
-      disabled:pointer-events-none disabled:opacity-50
-      hover:bg-violet-400 hover:text-neutral-950
-      data-[state=active]:bg-violet-400 data-[state=active]:text-neutral-950
-      hover:data-[state=active]:bg-violet-400 hover:data-[state=active]:text-neutral-950`,
-      className
-    )}
-    {...props}
-  />
+  <GlowGroup>
+    <TabsPrimitive.Trigger
+      ref={ref}
+      className={cn(
+        `px-3 py-1.5 inline-flex items-center justify-center whitespace-nowrap 
+        border border-transparent
+        text-sm font-medium ring-offset-white rounded-primary
+        focus-visible:outline-none focus-visible:ring-2 
+        focus-visible:ring-neutral-950 focus-visible:ring-offset-2 
+        disabled:pointer-events-none disabled:opacity-50
+        hover:border-violet-300 hover:text-violet-300
+        data-[state=active]:border-violet-400 data-[state=active]:text-violet-400
+        hover:data-[state=active]:border-violet-400 hover:data-[state=active]:text-violet-400`,
+        className
+      )}
+      {...props}
+    />
+  </GlowGroup>
 ))
 TabsTrigger.displayName = TabsPrimitive.Trigger.displayName
 

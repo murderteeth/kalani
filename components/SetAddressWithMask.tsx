@@ -6,7 +6,6 @@ import Button from '@/components/elements/Button'
 import { UseSimulateContractParameters, useAccount, useReadContracts, useSimulateContract, useWaitForTransactionReceipt } from 'wagmi'
 import { getAddress, zeroAddress } from 'viem'
 import InputAddress from '@/components/InputAddress'
-import { InputAddressProvider, useInputAddress } from '@/components/InputAddress/provider'
 import { EvmAddress, EvmAddressSchema, PSEUDO_ROLES } from '@/lib/types'
 import { useIsRoleManager } from '@/hooks/useRoleManager'
 import { useWriteContract } from '@/hooks/useWriteContract'
@@ -34,7 +33,7 @@ function useWrite(
   return { simulation, write, confirmation, resolveToast }
 }
 
-function Component({
+export default function SetAddress({
   label,
   verb,
   roleMask,
@@ -54,6 +53,8 @@ function Component({
 }) {
   const { isConnected, address } = useAccount()
   const [previous, setPrevious] = useState<EvmAddress | undefined>(undefined)
+  const [next, setNext] = useState<string | undefined>(undefined)
+  const [isNextValid, setIsNextValid] = useState<boolean>(false)
   const [roles, setRoles] = useState<bigint | undefined>(undefined)
   const isRoleManager = useIsRoleManager(contract.address)
 
@@ -63,7 +64,7 @@ function Component({
   ]})
 
   useEffect(() => {
-    if (multicall.isSuccess) {
+    if (multicall.data?.every(d => d.status === 'success')) {
       setPrevious(EvmAddressSchema.parse(multicall.data![0].result))
       let mask = z.bigint({ coerce: true }).parse(multicall.data![1].result)
       if (isRoleManager) { mask |= PSEUDO_ROLES.ROLE_MANAGER }
@@ -76,11 +77,6 @@ function Component({
 
   const permitted = useMemo(() => Boolean(roles && (roles & roleMask) === roleMask), [roles, roleMask])
 
-  const { 
-    next, setNext, 
-    isValid, setIsValid 
-  } = useInputAddress()
-
   useEffect(() => setNext(previous ?? ''), [setNext, previous])
 
   const changed = useMemo(() => Boolean(((previous || next) && (previous !== next))), [previous, next])
@@ -88,7 +84,7 @@ function Component({
 
   const { 
     simulation, write, confirmation, resolveToast
-  } = useWrite(contract, next, isConnected && changed && isValid)
+  } = useWrite(contract, next, isConnected && changed && isNextValid)
 
   useEffect(() => {
     if (confirmation.isSuccess) {
@@ -99,10 +95,10 @@ function Component({
 
   const onChange = useCallback((next: string, isValid: boolean) => {
     setNext(next)
-    setIsValid(isValid)
+    setIsNextValid(isValid)
     setError(undefined)
     write.reset()
-  }, [setNext, setIsValid, setError, write])
+  }, [setNext, setIsNextValid, setError, write])
 
   useEffect(() => {
     if (simulation.isError) {
@@ -130,13 +126,13 @@ function Component({
 
   const disableButton = useMemo(() => 
     !permitted
-    || !isValid 
+    || !isNextValid 
     || !changed
     || simulation.isFetching
     || !simulation.isSuccess
     || write.isPending
     || (write.isSuccess && confirmation.isPending),
-  [permitted, isValid, changed, simulation, write, confirmation])
+  [permitted, isNextValid, changed, simulation, write, confirmation])
 
   const onClick = useCallback(() => {
     write.writeContract(simulation.data!.request)
@@ -145,26 +141,16 @@ function Component({
   return <div className={`w-full flex flex-col gap-2 ${className}`}>
     <div className="text-neutral-400">{label}</div>
     <div className="flex items-center gap-4">
-      <InputAddress onChange={onChange} theme={inputTheme} disabled={disableInput} />
-      <Button onClick={onClick} theme={buttonTheme} disabled={disableButton} className="py-6">{verb}</Button>
+      <InputAddress 
+        previous={previous}
+        next={next}
+        setNext={setNext}
+        isNextValid={isNextValid}
+        setIsNextValid={setIsNextValid}
+        onChange={onChange} 
+        theme={inputTheme} 
+        disabled={disableInput} />
+      <Button onClick={onClick} theme={buttonTheme} disabled={disableButton} className="w-field-btn h-field-btn">{verb}</Button>
     </div>
   </div>
-}
-
-export default function SetAddress(props: {
-  label: ReactNode,
-  verb: string,
-  roleMask: bigint,
-  contract: {
-    address: EvmAddress,
-    abi: any,
-    get: string,
-    set: string
-  },
-  disabled?: boolean,
-  className?: string 
-}) {
-  return <InputAddressProvider>
-    <Component {...props} />
-  </InputAddressProvider>
 }

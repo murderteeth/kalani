@@ -29,6 +29,14 @@ const config = {
         secondary: colors.violet
       },
 
+      width: {
+        'field-btn': '8rem',
+      },
+
+      height: {
+        'field-btn': '54px',
+      },
+
       borderRadius: {
         primary: Theme.borderRadius.xl
       },
@@ -52,6 +60,7 @@ const config = {
       },
 
       animation: {
+        'atmospheric-pulse': 'pulse 30s cubic-bezier(0.4, 0, 0.6, 1) infinite',
         'accordion-down': 'accordion-down 0.1s ease-out',
         'accordion-up': 'accordion-up 0s ease-out',
       },

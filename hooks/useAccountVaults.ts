@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import useSWR from 'swr'
-import { AccountRoleSchema, EvmAddressSchema } from '@/lib/types'
+import { AccountRoleSchema, EvmAddressSchema, compareEvmAddresses } from '@/lib/types'
 import { useMemo } from 'react'
 import { ROLES, PSEUDO_ROLES } from '@/lib/types'
 
@@ -148,11 +148,11 @@ export function useAccountVaults(account?: `0x${string}` | null) {
     return UserSchema.parse({
       address: account,
       vaults: vaults.map(vault => {
-        const roleMask = roles.find(role => role.address === vault.address)?.roleMask || 0n
+        const roleMask = roles.find(role => compareEvmAddresses(role.vault, vault.address))?.roleMask ?? 0n
         return { 
           ...vault, 
           roleMask,
-          roles: getRoles(roles.find(role => role.address === vault.address)?.roleMask || 0n),
+          roles: getRoles(roles.find(role => compareEvmAddresses(role.vault, vault.address))?.roleMask ?? 0n),
           roleManager: (PSEUDO_ROLES.ROLE_MANAGER & roleMask) === PSEUDO_ROLES.ROLE_MANAGER,
           strategies: strategies.filter(strategy => vault.strategies.includes(strategy.address))
         }

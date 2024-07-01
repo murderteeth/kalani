@@ -1,8 +1,14 @@
-import { dot } from "node:test/reporters"
-
 const uncheckedClassName = `text-neutral-500 border-neutral-800`
 
 export const roleClassNames = {
+  'ROLE_MANAGER': {
+    defaults: `
+      hover:bg-green-500/10 hover:border-green-500 hover:text-green-400
+      active:border-green-300 active:text-green-200`,
+    checked: `border-green-700 text-green-500`,
+    unchecked: uncheckedClassName,
+    dot: `bg-green-300`,
+  },
   'ADD_STRATEGY_MANAGER': {
     defaults: `
       hover:bg-green-500/10 hover:border-green-500 hover:text-green-400

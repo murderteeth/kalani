@@ -1,15 +1,14 @@
 import abis from '@/lib/abis'
-import { EvmAddress, ROLES, enumerateEnum } from '@/lib/types'
+import { EvmAddress, EvmAddressSchema, ROLES, enumerateEnum } from '@/lib/types'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { UseSimulateContractParameters, useReadContract, useSimulateContract, useWaitForTransactionReceipt } from 'wagmi'
 import Toggle from './Toggle'
 import Button from '@/components/elements/Button'
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../../../../../components/shadcn/accordion'
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../../../../../../../components/shadcn/accordion'
 import { fEvmAddress } from '@/lib/format'
 import Dot from './Dot'
 import { PiStar, PiStarFill } from 'react-icons/pi'
 import InputAddress from '@/components/InputAddress'
-import { InputAddressProvider } from '@/components/InputAddress/provider'
 import { useIsRoleManager, useRoleManager } from '@/hooks/useRoleManager'
 import { zeroAddress } from 'viem'
 import Link from '@/components/elements/Link'
@@ -75,6 +74,8 @@ export default function SetRoles({
   const { roles: previous, refetch } = usePrevious({ vault, account })
   const [next, setNext] = useState<{ [key: string]: boolean }>({})
   const [error, setError] = useState<string | undefined>(undefined)
+  const [newAccount, setNewAccount] = useState<string | undefined>(undefined)
+  const [isNewAccountValid, setIsNewAccountValid] = useState<boolean>(false)
 
   const changed = useMemo(() => JSON.stringify(previous) !== JSON.stringify(next), [previous, next])
   const rolemask = useMemo(() => Object.keys(next).reduce((acc, role) => next[role] ? acc + BigInt(ROLES[role as keyof typeof ROLES]) : acc, 0n), [next])
@@ -93,9 +94,9 @@ export default function SetRoles({
     simulation, write, confirmation, resolveToast
   } = useWrite({ 
     vault, 
-    account: account ?? zeroAddress, 
+    account: account ?? (isNewAccountValid ? EvmAddressSchema.parse(newAccount) : zeroAddress), 
     rolemask, 
-    enabled: (_isRoleManager ?? false) && !!account && changed 
+    enabled: (_isRoleManager ?? false) && ((!!account && changed) || isNewAccountValid) 
   })
 
   useEffect(() => setNext(previous), [previous])
@@ -118,14 +119,14 @@ export default function SetRoles({
   const disableGesture = useMemo(() => !_isRoleManager, [_isRoleManager])
 
   const disableSave = useMemo(() => 
-    ! account
+    ! (account || newAccount)
     || !_isRoleManager
-    || !changed
+    || !(changed || isNewAccountValid)
     || simulation.isFetching
     || !simulation.isSuccess
     || write.isPending
     || (write.isSuccess && confirmation.isPending),
-  [account, _isRoleManager, changed, simulation, write, confirmation])
+  [account, _isRoleManager, changed, isNewAccountValid, simulation, write, confirmation, newAccount])
 
   const saveTheme = useMemo(() => {
     if (write.isSuccess && confirmation.isPending) return 'confirm'
@@ -161,7 +162,12 @@ export default function SetRoles({
           <Link href={`/account/${account ?? zeroAddress}`}>{account ?? zeroAddress}</Link>
         </div>}
 
-        {editAddress && <InputAddressProvider><InputAddress /></InputAddressProvider>}
+        {editAddress && <InputAddress 
+          previous={undefined}
+          next={newAccount}
+          setNext={setNewAccount}
+          isNextValid={isNewAccountValid}
+          setIsNextValid={setIsNewAccountValid} />}
 
         <div className="flex flex-wrap items-center gap-4">
           {Object.keys(next).map((role, i) => 
@@ -169,8 +175,8 @@ export default function SetRoles({
           )}
         </div>
         <div className="flex items-center justify-end gap-4">
-          <Button disabled={disableReset} onClick={reset}>Reset</Button>
-          <Button disabled={disableGesture} onClick={gesture} className="w-32">{gestureLabel}</Button>
+          <Button disabled={disableReset} onClick={reset} h={'secondary'}>Reset</Button>
+          <Button disabled={disableGesture} onClick={gesture}  h={'secondary'} className="w-32">{gestureLabel}</Button>
           <Button disabled={disableSave} theme={saveTheme} onClick={save}>Save</Button>
         </div>
       </AccordionContent>

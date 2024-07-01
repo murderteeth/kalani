@@ -27,13 +27,12 @@ export default function Search({ onSearch, className }: { onSearch?: (q: string)
   }, [ref, isConnected, address, setHasInput, setIsValid])
 
   const onChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    console.log('onChange', e.target.value)
     setHasInput(e.target.value.length > 0)
     setIsValid(EvmAddressSchema.safeParse(e.target.value).success)
   }, [setHasInput, setIsValid])
 
   return <div className={`group relative ${className}`}>
-    <Input ref={ref} type="text" onChange={onChange} placeholder={'Search accounts by address'} className="w-full" />
+    <Input ref={ref} type="text" onChange={onChange} maxLength={42} placeholder={'Search by address / vault / token'} className="w-full" />
     {!hasInput && <div className={`
       absolute top-0 right-4 h-full flex items-center text-neutral-800`}>/</div>}
 

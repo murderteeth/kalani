@@ -1,7 +1,9 @@
 import { z } from 'zod'
 import useSWR from 'swr'
-import { AccountRoleSchema, EvmAddressSchema } from '@/lib/types'
+import { AccountRoleSchema, EvmAddressSchema, compareEvmAddresses } from '@/lib/types'
 import { useParams } from 'next/navigation'
+import { nullsToUndefined } from '@/lib/object'
+import { useIndexedItems } from './useIndexedItems'
 
 const StrategySchema = z.object({
   chainId: z.number(),
@@ -12,9 +14,12 @@ const StrategySchema = z.object({
   targetDebtRatio: z.number()
 })
 
+export type Strategy = z.infer<typeof StrategySchema>
+
 export const VaultSchema = z.object({
   chainId: z.number(),
   address: EvmAddressSchema,
+  label: z.enum(['vault', 'strategy', 'erc4626']),
   name: z.string(),
   apiVersion: z.string(),
   asset: z.object({
@@ -23,14 +28,14 @@ export const VaultSchema = z.object({
     name: z.string(),
     decimals: z.number()  
   }),
-  accountant: EvmAddressSchema,
-  roleManager: EvmAddressSchema,
+  accountant: EvmAddressSchema.optional(),
+  roleManager: EvmAddressSchema.optional(),
   inceptBlock: z.bigint({ coerce: true }),
   inceptTime: z.number({ coerce: true }),
-  deposit_limit: z.bigint({ coerce: true }),
-  deposit_limit_module: EvmAddressSchema,
+  deposit_limit: z.bigint({ coerce: true }).optional(),
+  deposit_limit_module: EvmAddressSchema.optional(),
   pricePerShare: z.bigint({ coerce: true }),
-  lastProfitUpdate: z.number({ coerce: true }),
+  lastProfitUpdate: z.number({ coerce: true }).optional(),
   totalAssets: z.bigint({ coerce: true }),
   totalDebt: z.bigint({ coerce: true }),
   fees: z.object({ performanceFee: z.number({ coerce: true }) }),
@@ -113,6 +118,8 @@ export function useVaultFromParams() {
 }
 
 export function useVault({ chainId, address }: { chainId: number, address: `0x${string}` }) {
+  const items = useIndexedItems()
+
   const endpoint = process.env.NEXT_PUBLIC_KONG_GQL ?? 'http://localhost:3001/api/gql'
 
   const { data } = useSWR(
@@ -143,9 +150,20 @@ export function useVault({ chainId, address }: { chainId: number, address: `0x${
     }
   })
 
-  return VaultSchema.parse({ 
-    ...vault, 
+  const item = items.find(item => item.chainId === vault.chainid && compareEvmAddresses(item.address, vault.address))
+
+  return VaultSchema.parse(nullsToUndefined({
+    label: item?.label ?? 'vault',
+    ...vault,
     strategies,
     accounts: data.data.accounts,
-  })
+  }))
+}
+
+export function withVault(WrappedComponent: React.ComponentType<{ vault: Vault }>) {
+  return function ComponentWithVault(props: any) {
+    const vault = useVaultFromParams()
+    if (!vault) return <></>
+    return <WrappedComponent vault={vault} {...props} />
+  }
 }

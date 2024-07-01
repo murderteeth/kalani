@@ -44,19 +44,20 @@ export default function Vault() {
     flex flex-col items-center justify-start gap-8`}>
     <div className="w-full flex items-center justify-center gap-8">
       <div className="w-1/2 h-48 p-4 flex flex-col justify-center gap-2">
-        <div className="text-sm">vault {fEvmAddress(vault.address)}</div>
+        <div className="text-sm">{vault.label} {fEvmAddress(vault.address)}</div>
         <div className={`text-4xl ${fancy.className}`}>{vault.name}</div>
         <div className="flex items-center gap-8">
-          [{getChain(vault.chainId).name}]
-          <ValueLabelPair value={fNumber(vault.tvl.close)} label="tvl" className="text-3xl" />
-          <ValueLabelPair value={fPercent(vault.apy.close)} label="apy" className="text-3xl" />
+          <div>
+            <div>[{getChain(vault.chainId).name}]</div>
+          </div>
+          <ValueLabelPair value={fNumber(vault.tvl.close)} label="tvl" className="text-4xl" />
+          <ValueLabelPair value={fPercent(vault.apy.close)} label="apy" className="text-4xl" />
         </div>
       </div>
       <div className={`
-        w-1/2 h-48 flex items-center justify-center justify-center gap-12
-        bg-neutral-950 border border-neutral-900 rounded-primary`}>
+        w-1/2 h-48 flex items-center justify-center justify-center gap-12`}>
         <Badge label="Accountant" icon={PiCalculator} enabled={true} />
-        <Badge label="Allocator" icon={PiScales} enabled={true} />
+        {vault.strategies.length > 0 && <Badge label="Allocator" icon={PiScales} enabled={true} />}
         <Badge label="yHaaS" icon={PiTractorFill} />
       </div>
     </div>
@@ -66,8 +67,8 @@ export default function Vault() {
         <TabsTrigger value="assets">Assets</TabsTrigger>
         <TabsTrigger value="strategies">Strategies</TabsTrigger>
         <TabsTrigger value="accountant">Accountant</TabsTrigger>
-        <TabsTrigger value="allocator">Allocator</TabsTrigger>
-        <TabsTrigger value="yhaas">yHaaS</TabsTrigger>
+        {vault.strategies.length > 0 && <TabsTrigger value="allocator">Allocator</TabsTrigger>}
+        <TabsTrigger value="yhaas">Reports</TabsTrigger>
         <TabsTrigger value="roles">Roles</TabsTrigger>
       </TabsList>
       <TabsContent value="assets"><Assets /></TabsContent>
@@ -88,34 +89,36 @@ export default function Vault() {
       <div className={`
         w-1/2 h-full p-4 text-primary-200`}>
         <table className="table-auto w-full">
-          <tr>
-            <td>Total assets</td>
-            <td className="text-right">{fTokens(vault.totalAssets, vault.asset.decimals)}</td>
-          </tr>
-          <tr>
-            <td>Allocated</td>
-            <td className="text-right">{fBps(allocated)}</td>
-          </tr>
-          <tr>
-            <td>Deployed</td>
-            <td className="text-right">{fPercent(deployed)}</td>
-          </tr>
-          <tr>
-            <td>Idle assets</td>
-            <td className="text-right">{fTokens(idle, vault.asset.decimals)}</td>
-          </tr>
-          <tr>
-            <td>Deposit limit</td>
-            <td className="text-right">{fTokens(vault.deposit_limit, vault.asset.decimals, { fixed: 0 })}</td>
-          </tr>
-          <tr>
-            <td>Accountant</td>
-            <td className="text-right">{fEvmAddress(vault.accountant)}</td>
-          </tr>
-          <tr>
-            <td>Performance fee</td>
-            <td className="text-right">{fBps(vault.fees.performanceFee)}</td>
-          </tr>
+          <tbody>
+            <tr>
+              <td>Total assets</td>
+              <td className="text-right">{fTokens(vault.totalAssets, vault.asset.decimals)}</td>
+            </tr>
+            <tr>
+              <td>Allocated</td>
+              <td className="text-right">{fBps(allocated)}</td>
+            </tr>
+            <tr>
+              <td>Deployed</td>
+              <td className="text-right">{fPercent(deployed)}</td>
+            </tr>
+            <tr>
+              <td>Idle assets</td>
+              <td className="text-right">{fTokens(idle, vault.asset.decimals)}</td>
+            </tr>
+            <tr>
+              <td>Deposit limit</td>
+              <td className="text-right">{fTokens(vault.deposit_limit, vault.asset.decimals, { fixed: 0 })}</td>
+            </tr>
+            <tr>
+              <td>Accountant</td>
+              <td className="text-right">{fEvmAddress(vault.accountant)}</td>
+            </tr>
+            <tr>
+              <td>Performance fee</td>
+              <td className="text-right">{fBps(vault.fees.performanceFee)}</td>
+            </tr>
+          </tbody>
         </table>
       </div>
     </div>

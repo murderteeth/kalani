@@ -1,14 +1,16 @@
-import { PiCheck, PiStar } from 'react-icons/pi'
+import { PiCheck, PiStar, PiStarFill } from 'react-icons/pi'
 import ReactTimeago from 'react-timeago'
 import { useRouter } from 'next/navigation'
 import { UserVault } from '@/hooks/useAccountVaults'
-import { fNumber, fPercent, fUSD } from '@/lib/format'
+import { fEvmAddress, fNumber, fPercent, fUSD } from '@/lib/format'
 import { useMemo } from 'react'
 import { priced } from '@/lib/bmath'
 import { getChain } from '@/lib/chains'
 import Screen from '@/components/Screen'
 import ValueLabelPair from '@/components/ValueLabelPair'
 import { fancy } from '@/lib/fancy'
+import { roleClassNames } from '@/app/vault/[chainId]/[address]/tabs/Roles/SetRoles/roleClassNames'
+import { EvmAddress } from '@/lib/types'
 
 function fakePrice(address: `0x${string}`) {
   if (address === '0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619') {
@@ -20,7 +22,11 @@ function fakePrice(address: `0x${string}`) {
   }
 }
 
-export default function Tile({ vault }: { vault: UserVault }) {
+export default function Tile({ 
+  vault, account 
+}: { 
+  vault: UserVault, account: EvmAddress 
+}) {
   const router = useRouter()
 
   const [latest] = useMemo(() => {
@@ -34,7 +40,7 @@ export default function Tile({ vault }: { vault: UserVault }) {
 
   return <Screen onClick={() => router.push(`/vault/${vault.chainId}/${vault.address}`)} className={`
     w-full p-12 flex gap-8 border border-neutral-900
-    hover:border-violet-300 hover:!text-violet-300 hover:bg-neutral-900
+    hover:border-violet-300 hover:!text-violet-300
     active:border-violet-400 active:!text-violet-400
     bg-neutral-950 text-neutral-300
     cursor-pointer`}>
@@ -63,24 +69,27 @@ export default function Tile({ vault }: { vault: UserVault }) {
 
     </div>
     <div className="w-1/2 flex flex-col justify-center gap-4">
+      <div className="text-lg">Roles for {fEvmAddress(account)}</div>
       <div className="flex flex-wrap items-center gap-4">
-        <div className="ml-4 text-lg">Roles</div>
         {vault.roleManager && <div className={`
           py-2 px-4 flex items-center gap-2
-          border border-neutral-800
-          text-xs rounded-primary`}>
-          <PiStar />
+          border border-yellow-600
+          text-xs text-yellow-400 rounded-primary`}>
+          <PiStarFill />
           ROLE MANAGER
         </div>}
-        {Object.keys(vault.roles).map((role, i) => 
-          <div key={i} className={`
+        {Object.keys(vault.roles).map((role, i) => {
+          const checked = vault.roles[role]
+          const roleClassName = roleClassNames[role as keyof typeof roleClassNames] ?? {}
+          return <div key={i} className={`
             py-2 px-4 flex items-center gap-2
-            border border-neutral-800
-            text-xs rounded-primary
-            ${vault.roles[role] ? '' : 'text-neutral-800'}`}>
-            {vault.roles[role] ? <PiCheck /> : <></>}
+            border text-xs rounded-primary
+            ${roleClassName.defaults} ${checked ? roleClassName.checked : roleClassName.unchecked}
+            pointer-events-none`}>
+            {checked ? <PiCheck /> : <></>}
             {role.replace('_MANAGER', '').replace('_', ' ')}
           </div>
+          }
         )}
       </div>
     </div>

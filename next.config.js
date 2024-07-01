@@ -2,15 +2,21 @@
 const nextConfig = {
   reactStrictMode: true,
   images: {
-    remotePatterns: [{
+    remotePatterns: [
+    {
       protocol: 'https',
       hostname: 'assets.smold.app',
-      pathname: '/**/*',
+      pathname: '/**',
     }, {
       protocol: 'https',
       hostname: 'raw.githubusercontent.com',
       pathname: '/**/*',
-    }]
+    },{
+      protocol: 'https',
+      hostname: 'public-files.gumroad.com',
+      pathname: '/**',
+    }
+  ]
   },
   env: {
     WALLETCONNECT_PROJECT_NAME: process.env.WALLETCONNECT_PROJECT_NAME,
