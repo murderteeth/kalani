@@ -122,7 +122,7 @@ export default function Launcher({
             <Yearn back="text-neutral-800 group-hover/button:text-neutral-900" front="text-neutral-200" />
             yFactory
           </LauncherIconButton>
-          <LauncherIconButton href="https://github.com/murderteeth/kalani" target="_blank" rel="noreferrer">
+          <LauncherIconButton href="https://github.com/yearn/kalani" target="_blank" rel="noreferrer">
             <PiGithubLogoFill size={32} />
             Github
           </LauncherIconButton>
